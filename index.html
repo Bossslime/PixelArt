@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <title>Test</title>
+  </head>
+
+  <style>
+      body {
+          margin: 0;
+          padding: 0;
+          background-color: #CABFC5;
+          position: absolute;
+          width: 100%;
+          height: 100%;
+      }
+
+      #vueApp {
+          width: 100%;
+          height: 100%;
+      }
+
+      .canvasContainer {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+
+          width: 100%;
+          height: 100%;
+      }
+
+      .canvasContainer > .canvas {
+          display: grid;
+          grid-template-columns: repeat(104, 20px);
+          grid-template-rows: repeat(53, 20px);
+
+      }
+
+      .canvasContainer > .canvas > .canvasItem {
+          background-color: white;
+
+          cursor: pointer; /* look into cursor.cc */
+
+          width: 100%;
+          height: 100%;
+      }
+
+      .canvasContainer > .canvas > .canvasItem:hover {
+          z-index: 98;
+          border: #92898A solid 1px;
+      }
+
+      .toolsMenuContainer {
+          display: flex;
+
+          justify-content: center;
+      }
+      .toolsMenuContainer > .toolsMenu {
+          position: absolute;
+          display: flex;
+          flex-direction: row;
+
+          justify-content: space-between;
+
+          z-index: 99;
+          width: 300px;
+          height: 50px;
+
+          top: -40px;
+
+          background-color: #92898A;
+
+          transition: top 0.5s ease;
+      }
+
+      .toolsMenuContainer > .toolsMenu:hover {
+          top: 0;
+      }
+
+      .toolsMenuContainer > .toolsMenu > .toolItem {
+          position: relative;
+          display: flex;
+
+          align-items: center;
+          justify-content: center;
+
+          font-size: 20px;
+
+          width: 20%;
+          height: 100%;
+      }
+
+      .toolsMenuContainer > .toolsMenu > .toolItem:hover {
+          background-color: #9C9495;
+          cursor: pointer;
+
+      }
+  </style>
+
+  <body>
+    <div id="vueApp">
+        <div class="toolsMenuContainer">
+            <div class="toolsMenu">
+                <div class="toolItem" style="margin-left: 10px;">dsf</div>
+                <div class="toolItem">dsf</div>
+                <div class="toolItem"><input id="colorPicker" type="color"/></div>
+                <div class="toolItem" style="margin-right: 10px;" title="Reset Canvas" onclick="resetCanvas()"><i class="fa-solid fa-rotate-left"></i></div>
+            </div>
+        </div>
+        <canvas_object></canvas_object>
+    </div>
+  </body>
+
+  <script src="fontawesome/js/all.js"></script>
+  <script src="vue/vue.js"></script>
+  <script src="jquery/jquery.min.js"></script>
+  <script>
+
+      Vue.component('canvas_object', {
+          template: `
+            <div class="canvasContainer">
+                <div class="canvas"
+                     @mousedown="onMouseDown"
+                     @mousemove="onMouseMove"
+                     @mouseup="onMouseUp"
+                     @mouseleave="onMouseUp">
+                  <div class="canvasItem" v-for="pixel in pixels"
+                       :style="{ backgroundColor: pixel.color }"
+                       v-on:click="changeColor(pixel)"
+                       v-on:mousedown="startDragging($event)"
+                       v-on:mousemove="drag(pixel)"
+                       v-on:mouseup="stopDragging"
+                       v-on:contextmenu.prevent="onRightClick(pixel)"
+                  >
+                  </div>
+                </div>
+            </div>
+          `,
+          data() {
+              return {
+                  isDragging: false,
+                  mouseButton: 0 //0 is left, 2 is right
+              }
+          },
+          computed: {
+              pixels() {
+                  return this.$parent.pixels; // Returns pixels array
+              },
+              currentColor() {
+                  return this.$parent.currentColor; //Returns the current selected color
+              }
+          },
+          methods: {
+              changeColor: function(pixel) {
+                  pixel.color = this.currentColor; //Change pixel to red (Or hex) on click
+              },
+              onRightClick: function(pixel) {
+                  pixel.color = "white"; //Reset pixel to white
+              },
+              startDragging: function(event) {
+                  this.mouseButton = event.button
+                  this.isDragging = true;
+              },
+              drag: function(pixel) {
+                  if (this.isDragging && this.mouseButton === 0) { //check if left button is pressed and drag is in progress
+                      pixel.color = this.currentColor;
+                  }else if (this.isDragging && this.mouseButton === 2) {
+                      pixel.color = "white"; //Drag erase
+                  }
+              },
+              stopDragging: function() {
+                  this.isDragging = false;
+              },
+              onMouseDown: function(event) {
+                  event.preventDefault();
+              },
+              onMouseMove: function(event) {
+                  event.preventDefault();
+              },
+              onMouseUp: function(event) {
+                  event.preventDefault();
+                  this.isDragging = false;
+              }
+          }
+      });
+
+      let app = new Vue({
+          el: '#vueApp',
+          data() {
+              return {
+                  pixels: [],
+                  currentColor: "black"
+              }
+          },
+          methods: {
+
+          }
+      })
+
+      resetCanvas()
+      function resetCanvas() {
+          app.pixels = [];
+
+          let length = 104;
+          let height = 54;
+
+          for (let i = 1; i <= (length * height); i++) { //Fill up the pixels array, giving each pixel an id and color
+              app.pixels.push({
+                  id: i,
+                  color: "white"
+              })
+          }
+      }
+
+
+      const colorPicker = document.getElementById('colorPicker');
+
+      colorPicker.addEventListener('change', (event) => { //Listen for color change
+          app.currentColor = event.target.value;
+      });
+  </script>
+</html>
